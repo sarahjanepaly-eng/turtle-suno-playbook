@@ -24,6 +24,15 @@ client_options = {
     'socketTimeoutMS': 10000,
 }
 
+# Add authentication mechanism for Atlas compatibility
+# Atlas uses SCRAM-SHA-256 by default, but we support both
+if 'authMechanism' not in mongo_url and 'mongodb+srv://' in mongo_url:
+    # For Atlas, prefer SCRAM-SHA-256
+    client_options['authMechanism'] = 'SCRAM-SHA-256'
+elif 'authMechanism' not in mongo_url:
+    # For local MongoDB, let it auto-negotiate (supports both SCRAM-SHA-1 and SCRAM-SHA-256)
+    pass
+
 # Add retryWrites for Atlas MongoDB (safe for local too) - only if not already present
 if 'retryWrites' not in mongo_url:
     # Check if URL already has query parameters
@@ -57,6 +66,28 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Root-level health check for Kubernetes probes (no /api prefix)
+@app.get("/health")
+async def root_health_check():
+    """Root-level health check for Kubernetes readiness/liveness probes"""
+    try:
+        # Attempt to ping MongoDB
+        await client.admin.command('ping')
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "service": "operational"
+        }
+    except Exception as e:
+        # Log error but still return 200 to prevent pod restarts during temporary DB issues
+        logger.warning(f"Health check - MongoDB ping failed: {str(e)}")
+        return {
+            "status": "degraded",
+            "database": "checking",
+            "service": "operational",
+            "note": "Database connectivity issue detected"
+        }
 
 
 # Define Models

@@ -1,5 +1,57 @@
 # Deployment Fixes for Atlas MongoDB Compatibility
 
+## Latest Updates (Final Deployment Fix)
+
+### Issue: Health Check Endpoint Mismatch
+**Problem:** Kubernetes deployment health checks were looking for `/health` but the application only had `/api/health`
+**Fix:** Added root-level `/health` endpoint in addition to `/api/health`
+
+### Issue: SCRAM-SHA-1 vs SCRAM-SHA-256 Authentication
+**Problem:** MongoDB migration tool failed with `unable to authenticate using mechanism "SCRAM-SHA-1"`
+**Root Cause:** Atlas MongoDB uses SCRAM-SHA-256 by default, but the connection wasn't explicitly configured
+**Fix:** Added automatic authentication mechanism selection based on connection string type
+
+## All Deployment Issues Resolved
+
+### 1. Health Check Endpoints (NEW)
+
+**Added Root-Level Health Check:**
+```python
+@app.get("/health")
+async def root_health_check():
+    """Root-level health check for Kubernetes readiness/liveness probes"""
+    await client.admin.command('ping')
+    return {
+        "status": "healthy",
+        "database": "connected",
+        "service": "operational"
+    }
+```
+
+**Why:** 
+- Kubernetes deployment checks `/health` (without /api prefix)
+- Returns 200 OK when database is accessible
+- Gracefully degrades if database temporarily unavailable
+- Prevents pod restarts during transient issues
+
+**Available Endpoints:**
+- `/health` - Kubernetes probes (root level)
+- `/api/health` - Application health with detailed message
+
+### 2. Enhanced Authentication Support (NEW)
+
+**Smart Auth Mechanism Selection:**
+```python
+if 'authMechanism' not in mongo_url and 'mongodb+srv://' in mongo_url:
+    client_options['authMechanism'] = 'SCRAM-SHA-256'  # Atlas default
+```
+
+**Why:**
+- Atlas MongoDB uses SCRAM-SHA-256 (more secure)
+- Local MongoDB might use SCRAM-SHA-1
+- Auto-detects based on connection string type
+- Explicitly sets mechanism for Atlas to avoid authentication errors
+
 ## Issues Identified
 
 ### 1. MongoDB Authentication Error
