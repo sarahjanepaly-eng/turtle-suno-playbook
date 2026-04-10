@@ -6,7 +6,7 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Dict, Any
 import uuid
 from datetime import datetime, timezone
 
@@ -69,7 +69,7 @@ api_router = APIRouter(prefix="/api")
 
 # Root-level health check for Kubernetes probes (no /api prefix)
 @app.get("/health")
-async def root_health_check():
+async def root_health_check() -> Dict[str, str]:
     """Root-level health check for Kubernetes readiness/liveness probes"""
     try:
         # Attempt to ping MongoDB
@@ -103,11 +103,11 @@ class StatusCheckCreate(BaseModel):
 
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
-async def root():
+async def root() -> Dict[str, str]:
     return {"message": "Hello World"}
 
 @api_router.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, str]:
     """Health check endpoint that verifies MongoDB connectivity"""
     try:
         # Attempt to ping MongoDB
@@ -126,7 +126,7 @@ async def health_check():
         }
 
 @api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
+async def create_status_check(input: StatusCheckCreate) -> StatusCheck:
     try:
         status_dict = input.model_dump()
         status_obj = StatusCheck(**status_dict)
@@ -146,7 +146,7 @@ async def create_status_check(input: StatusCheckCreate):
         raise
 
 @api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
+async def get_status_checks() -> List[StatusCheck]:
     try:
         # Exclude MongoDB's _id field from the query results
         status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
@@ -179,7 +179,7 @@ logging.basicConfig(
 )
 
 @app.on_event("startup")
-async def startup_db_client():
+async def startup_db_client() -> None:
     """Verify MongoDB connection on startup"""
     try:
         # Ping the database to verify connection
@@ -196,7 +196,7 @@ async def startup_db_client():
         # Don't raise - let the app start and fail gracefully on DB operations
 
 @app.on_event("shutdown")
-async def shutdown_db_client():
+async def shutdown_db_client() -> None:
     """Close MongoDB connection on shutdown"""
     try:
         client.close()

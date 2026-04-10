@@ -451,49 +451,56 @@ const sanityChecks = {
   hasTagLibrary: Object.keys(sunoTagLibrary).length > 0,
 };
 
+// Home page sub-components
+function HeroSection() {
+  const features = [
+    [Music4, "Build cleaner songs"],
+    [Layers, "Use sections properly"],
+    [Radio, "Control vocal behavior"],
+    [Disc3, "Create DJ-ready versions"],
+  ];
+
+  return (
+    <Card className={`${card} overflow-hidden`}>
+      <CardContent className="p-8 md:p-10">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid items-center gap-8 md:grid-cols-2">
+          <div>
+            <Badge className="mb-4 rounded-full border border-[#CFA18D]/30 bg-[#CFA18D]/20 text-[#F5EDE5]">Turtle Suno System</Badge>
+            <h1 className="text-4xl font-semibold leading-tight md:text-5xl">The full master website for making better Suno songs.</h1>
+            <p className={`mt-4 text-base md:text-lg ${soft}`}>
+              Built as a usable handbook: templates, copy boxes, workflow logic, mix notes, prompt collections, and Suno tag guidance.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Badge variant="secondary" className="rounded-full">Prompt blueprints</Badge>
+              <Badge variant="secondary" className="rounded-full">Style vault</Badge>
+              <Badge variant="secondary" className="rounded-full">Lyrics maps</Badge>
+              <Badge variant="secondary" className="rounded-full">Suno tags</Badge>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {features.map(([Icon, label], i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.06 }}
+                className="rounded-3xl border border-white/10 bg-white/5 p-5"
+              >
+                <Icon className="mb-3 h-6 w-6 text-[#CFA18D]" />
+                <div className="font-medium">{label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function HomePage() {
   return (
     <div className="space-y-6">
-      <Card className={`${card} overflow-hidden`}>
-        <CardContent className="p-8 md:p-10">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid items-center gap-8 md:grid-cols-2">
-            <div>
-              <Badge className="mb-4 rounded-full border border-[#CFA18D]/30 bg-[#CFA18D]/20 text-[#F5EDE5]">Turtle Suno System</Badge>
-              <h1 className="text-4xl font-semibold leading-tight md:text-5xl">The full master website for making better Suno songs.</h1>
-              <p className={`mt-4 text-base md:text-lg ${soft}`}>
-                Built as a usable handbook: templates, copy boxes, workflow logic, mix notes, prompt collections, and Suno tag guidance.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Badge variant="secondary" className="rounded-full">Prompt blueprints</Badge>
-                <Badge variant="secondary" className="rounded-full">Style vault</Badge>
-                <Badge variant="secondary" className="rounded-full">Lyrics maps</Badge>
-                <Badge variant="secondary" className="rounded-full">Suno tags</Badge>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                [Music4, "Build cleaner songs"],
-                [Layers, "Use sections properly"],
-                [Radio, "Control vocal behavior"],
-                [Disc3, "Create DJ-ready versions"],
-              ].map(([Icon, label], i) => {
-                return (
-                  <motion.div
-                    key={label}
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="rounded-3xl border border-white/10 bg-white/5 p-5"
-                  >
-                    <Icon className="mb-3 h-6 w-6 text-[#CFA18D]" />
-                    <div className="font-medium">{label}</div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        </CardContent>
-      </Card>
+      <HeroSection />
 
       <div className="grid gap-6 md:grid-cols-2">
         <CopyBox
@@ -820,6 +827,73 @@ function RightsPage() {
   );
 }
 
+// Sidebar Navigation Component
+function Sidebar({ page, setPage, query, setQuery, filteredPages }) {
+  return (
+    <aside className="border-r border-white/10 bg-black/20 p-4 lg:p-6">
+      <div className="sticky top-0 space-y-5">
+        <div>
+          <div className="text-sm uppercase tracking-[0.25em] text-[#FDE68A]">Master website</div>
+          <div className="mt-2 text-3xl font-semibold">Turtle Suno Playbook</div>
+          <p className={`mt-2 text-base ${soft}`}>Every rule, template, workflow, and copy box in one place.</p>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search pages..."
+            className="rounded-2xl border-white/10 bg-white/5 pl-9"
+          />
+        </div>
+
+        <ScrollArea className="h-[65vh] pr-2">
+          <div className="space-y-2">
+            {filteredPages.map((item) => {
+              const Icon = item.icon;
+              const active = page === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setPage(item.id)}
+                  className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${active ? "bg-white text-[#0B0E1A]" : "bg-white/5 text-white hover:bg-white/10"}`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="text-base font-semibold">{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </div>
+    </aside>
+  );
+}
+
+// Main Content Header Component
+function ContentHeader({ currentLabel, page, setPage }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 className="text-3xl font-semibold md:text-4xl">{currentLabel}</h2>
+        <p className={`${soft} mt-1 text-base`}>Structured for fast use, copying, and iteration.</p>
+      </div>
+      <Tabs value={page} onValueChange={(value) => setPage(value)}>
+        <TabsList className="rounded-2xl border border-white/10 bg-white/5">
+          <TabsTrigger value="home">Home</TabsTrigger>
+          <TabsTrigger value="prompts">Prompts</TabsTrigger>
+          <TabsTrigger value="collections">Collections</TabsTrigger>
+          <TabsTrigger value="tags">Tags</TabsTrigger>
+          <TabsTrigger value="mix">Mix</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+}
+
 export default function TurtleSunoMasterPlaybook() {
   const [page, setPage] = useState("home");
   const [query, setQuery] = useState("");
@@ -828,7 +902,7 @@ export default function TurtleSunoMasterPlaybook() {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return pages;
     return pages.filter((item) => item.label.toLowerCase().includes(trimmed));
-  }, [query]);
+  }, [query, pages]);
 
   const currentPageMap = {
     home: HomePage,
@@ -854,65 +928,17 @@ export default function TurtleSunoMasterPlaybook() {
   return (
     <div className={shell}>
       <div className="grid min-h-screen lg:grid-cols-[290px_1fr]">
-        <aside className="border-r border-white/10 bg-black/20 p-4 lg:p-6">
-          <div className="sticky top-0 space-y-5">
-            <div>
-              <div className="text-sm uppercase tracking-[0.25em] text-[#FDE68A]">Master website</div>
-              <div className="mt-2 text-3xl font-semibold">Turtle Suno Playbook</div>
-              <p className={`mt-2 text-base ${soft}`}>Every rule, template, workflow, and copy box in one place.</p>
-            </div>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search pages..."
-                className="rounded-2xl border-white/10 bg-white/5 pl-9"
-              />
-            </div>
-
-            <ScrollArea className="h-[65vh] pr-2">
-              <div className="space-y-2">
-                {filteredPages.map((item) => {
-                  const Icon = item.icon;
-                  const active = page === item.id;
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setPage(item.id)}
-                      className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${active ? "bg-white text-[#0B0E1A]" : "bg-white/5 text-white hover:bg-white/10"}`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="text-base font-semibold">{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </div>
-        </aside>
+        <Sidebar 
+          page={page} 
+          setPage={setPage} 
+          query={query} 
+          setQuery={setQuery} 
+          filteredPages={filteredPages} 
+        />
 
         <main className="p-5 md:p-8 lg:p-10">
           <div className="mx-auto max-w-7xl space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-3xl font-semibold md:text-4xl">{currentLabel}</h2>
-                <p className={`${soft} mt-1 text-base`}>Structured for fast use, copying, and iteration.</p>
-              </div>
-              <Tabs value={page} onValueChange={(value) => setPage(value)}>
-                <TabsList className="rounded-2xl border border-white/10 bg-white/5">
-                  <TabsTrigger value="home">Home</TabsTrigger>
-                  <TabsTrigger value="prompts">Prompts</TabsTrigger>
-                  <TabsTrigger value="collections">Collections</TabsTrigger>
-                  <TabsTrigger value="tags">Tags</TabsTrigger>
-                  <TabsTrigger value="mix">Mix</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
+            <ContentHeader currentLabel={currentLabel} page={page} setPage={setPage} />
             <CurrentPage />
           </div>
         </main>
